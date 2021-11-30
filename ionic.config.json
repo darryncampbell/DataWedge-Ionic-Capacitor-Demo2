@@ -1,0 +1,7 @@
+{
+  "name": "DataWedge-Ionic-Capacitor-Demo2",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}
