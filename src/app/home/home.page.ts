@@ -5,6 +5,8 @@ import { Platform } from '@ionic/angular';
 import { Device } from '@capacitor/device';
 import { ToastController } from '@ionic/angular';
 import { DataWedgeConfigMode, DataWedgePlugin } from '@ionic-enterprise/zebra-scanner/dist/esm/definitions';
+import { Events } from '../services/events';
+import { BarcodeService } from '../services/barcode.service';
 
 
 @Component({
@@ -32,7 +34,9 @@ export class HomePage {
   private uiHideCommandMessages = true;
   private uiHideFloatingActionButton = true;
 
-  constructor(private changeDetectorRef: ChangeDetectorRef, private alertController: AlertController, private platform: Platform, private toastController: ToastController) {
+  constructor(private barcodeProvider: BarcodeService, private changeDetectorRef: ChangeDetectorRef, 
+    public events: Events, private alertController: AlertController, private platform: Platform, 
+    private toastController: ToastController) {
 
     this.platform.ready().then(async (readySource) => {
       this.checkZebraDevice();
@@ -40,6 +44,21 @@ export class HomePage {
       //  Determine the version.  We can add additional functionality if a more recent version of the DW API is present
       const result = await ZebraQuery.getVersionInfo();
       this.parseVersion(result);
+
+      //  A scan has been received
+      events.subscribe('data:scan', (data: any) => {
+        //  Update the list of scanned barcodes
+        let scannedData = data.scanData.extras["com.symbol.datawedge.data_string"];
+        let scannedType = data.scanData.extras["com.symbol.datawedge.label_type"];
+        this.scans.unshift({ "data": scannedData, "type": scannedType, "timeAtDecode": data.time });
+
+        //  On older devices, if a scan is received we can assume the profile was correctly configured manually
+        //  so remove the yellow highlight.
+        this.uiDatawedgeVersionAttention = false;
+
+        this.changeDetectorRef.detectChanges();
+      });
+      
     });
   }
 
@@ -166,7 +185,7 @@ export class HomePage {
   {
     try {
       const result = await ZebraQuery.enumerateScanners();
-      console.log("Enum Result: " + JSON.stringify(result));  //  TODO THIS IS COMING BUT NEED TO SEE WHAT IT IS
+      console.log("Enum Result: " + JSON.stringify(result));
       let enumeratedScanners = result['com.symbol.datawedge.api.RESULT_ENUMERATE_SCANNERS'];
       this.scanners = enumeratedScanners;
       let humanReadableScannerList = "";
@@ -245,7 +264,7 @@ export class HomePage {
 //        "RESET_CONFIG": "true",
 //        "PARAM_LIST": {
 //          "intent_output_enabled": "true",
-//          "intent_action": "com.zebra.ionic.capacitor.ACTION",
+//          "intent_action": "com.darryn.ionic.capacitor.ACTION",
 //          "intent_delivery": "2"
 //        }
 //      }
