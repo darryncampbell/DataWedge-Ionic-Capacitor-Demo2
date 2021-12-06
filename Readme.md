@@ -3,16 +3,25 @@
 
 # DataWedge-Ionic-Capacitor-Demo2
 
+This sample demonstrates the use of the official Ionic plugin for Zebra devices.
+For clarity, this plugin is supported by Ionic and was developed independently of Zebra
 
 Docs: https://ionic.io/docs/zebra-datawedge
 Announcement: https://ionicframework.com/blog/announcing-zebra-datawedge-integration 
 
 Do you have an Ionic account? Sign up here if not: https://dashboard.ionicframework.com/. 
+Check out this page to register an app in appflow: https://ionic.io/docs/supported-plugins/setup 
 
+```
 git clone https://github.com/darryncampbell/DataWedge-Ionic-Capacitor-Demo2.git
 cd DataWedge-Ionic-Capacitor-Demo2
 npm update
 npx cap update
+```
+
+## Notes
+Automatically registers a broadcast receiver for io.ionic.starter.ACTION
+I set up a DataWedge profile manually.  The scan is received in the broadcast receiver but the app does not do anything with it (there is nothing I can register for)
 
 
 ### Running this project on Android
@@ -26,9 +35,12 @@ ionic capacitor run android
 
 ```
 ionic capacitor build android
+//  Android Studio will launch
 ```
 
 ### Plugin Installation
+NEED AN ENTERPRISE KEY AND IONIC ENTERPRISE ACCOUNT
+
 https://ionic.io/docs/zebra-datawedge/install
 
 ```
@@ -44,12 +56,3 @@ ionic capacitor copy android
 ionic capacitor run android
 
 
-# OLD
-### Adding plugin to new project:
-
-This application uses a 3rd party Cordova plugin to interface with DataWedge via Intents.  To add this Cordova plugin to your application run the following commands: 
-
-```
-npm i com-darryncampbell-cordova-plugin-intent
-npx cap update
-```

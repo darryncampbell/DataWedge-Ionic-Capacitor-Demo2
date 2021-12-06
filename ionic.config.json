@@ -1,7 +1,16 @@
 {
   "name": "DataWedge-Ionic-Capacitor-Demo2",
   "integrations": {
-    "capacitor": {}
+    "capacitor": {},
+    "enterprise": {
+      "keyId": 5078,
+      "productKey": "key_b3c53c64589048fcbfba8a9e26881932",
+      "appId": "b0f87f9b",
+      "orgId": "2155fa2a-292d-4828-8c63-b33f37d67594",
+      "registries": [
+        "@ionic-enterprise;https://registry.ionicframework.com/"
+      ]
+    }
   },
   "type": "angular"
 }
