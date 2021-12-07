@@ -1,7 +1,7 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
     <ion-title>
-      Zebra Ionic Capacitor DataWedge Demo
+      Ionic Capacitor DW Demo 2
     </ion-title>
   </ion-toolbar>
 </ion-header>
@@ -21,7 +21,7 @@
     </ion-item>
     <ion-item no-lines [ngClass]="{'hide' : uiHideCommandMessages}">
       <ion-label position="stacked" color="primary">Last API message:</ion-label>
-      <ion-textarea rows="1" [value]="commandResultText" [readonly]=true></ion-textarea>
+      <ion-textarea [value]="commandResultText" [readonly]=true></ion-textarea>
     </ion-item>
     <ion-item no-lines [ngClass]="{'hide' : uiHideShowAvailableScanners}">
       <ion-label position="stacked" color="primary">Available scanners:</ion-label>
@@ -30,7 +30,7 @@
     <ion-item no-lines [ngClass]="{'hide' : uiHideSelectScanner}">
       <ion-label position="stacked" color="primary">Selected Scanner</ion-label>
       <ion-select [(ngModel)]="selectedScanner" (ionChange)="scannerSelected()" okText="Select" cancelText="Dismiss">
-        <ion-select-option *ngFor="let scanner of scanners" [value]="scanner.SCANNER_NAME">{{scanner.SCANNER_NAME}}</ion-select-option>
+        <ion-select-option *ngFor="let scannerTemp of scanners" [value]="scannerTemp.SCANNER_NAME">{{scannerTemp.SCANNER_NAME}}</ion-select-option>
       </ion-select>
     </ion-item>
 
