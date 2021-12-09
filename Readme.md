@@ -55,4 +55,13 @@ ionic capacitor add android
 ionic capacitor copy android
 ionic capacitor run android
 
+### Tested Versions
+
+Developed and tested on TC52ax running DataWedge 11.2.48
+Earlier versions of DataWedge have not been tested.
+- NEED to specify appList
+- What version is minimally supported?  E.g. to pass an array of plugins requires DW 6.5
+- Lets assume minimum DW 6.5
+- No support for switch scanner params
+
 

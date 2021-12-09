@@ -23,16 +23,10 @@ export class HomePage {
   private ean13Decoder = true;  //  Model for decoder
   private code39Decoder = true; //  Model for decoder
   private code128Decoder = true;//  Model for decoder
-  private dataWedgeVersion = "Pre 6.3. Please create & configure profile manually.  See the ReadMe for more details.";
-  private availableScannersText = "Requires Datawedge 6.3+"
+  private dataWedgeVersion = "Pre 6.5. This sample app is not recommended for your device";
   private activeProfileText = "Requires Datawedge 6.3+";
   private commandResultText = "Messages from DataWedge will go here";
-  private uiHideDecoders = true;
   private uiDatawedgeVersionAttention = true;
-  private uiHideSelectScanner = true;
-  private uiHideShowAvailableScanners = false;
-  private uiHideCommandMessages = true;
-  private uiHideFloatingActionButton = true;
 
   constructor(private barcodeProvider: BarcodeService, private changeDetectorRef: ChangeDetectorRef, 
     public events: Events, private alertController: AlertController, private platform: Platform, 
@@ -89,83 +83,31 @@ export class HomePage {
   }
 
   private async parseVersion(versionJson) {
-    //  The version has been returned (DW 6.3 or higher).  Includes the DW version along with other subsystem versions e.g MX  
-    console.log('Version Info: ' + JSON.stringify(versionJson));
+    //  The version has been returned.  Includes the DW version along with other subsystem versions e.g MX  
     var versionInfo = versionJson['com.symbol.datawedge.api.RESULT_GET_VERSION_INFO'];
     console.log('Version Info: ' + JSON.stringify(versionInfo));
-    let dwVersionTemp = versionInfo['DATAWEDGE'];
     let dwVersion = versionInfo['DATAWEDGE'];
+    this.dataWedgeVersion = dwVersion;
     console.log("Datawedge version: " + dwVersion);
-    dwVersionTemp = dwVersionTemp.padStart(5, "0");
     
-    //  Fire events sequentially so the application can gracefully degrade the functionality available on earlier DW versions
-    if (dwVersionTemp >= "006.3")
-      await this.dataWedgeIsAtLeast63();
-    if (dwVersionTemp >= "006.4")
-      await this.dataWedgeIsAtLeast64();
+    let dwVersionTemp = versionInfo['DATAWEDGE'];
+    dwVersionTemp = dwVersionTemp.padStart(5, "0");
+    this.changeDetectorRef.detectChanges();
+    
     if (dwVersionTemp >= "006.5")
-      await this.dataWedgeIsAtLeast65(dwVersion);
+      await this.dataWedgeIsAtLeast65();
   }
 
-  private async dataWedgeIsAtLeast63()
+  private async dataWedgeIsAtLeast65()
   {
-    console.log("DataWedge 6.3 APIs are available");
-    //  We are able to create the profile under 6.3.  If no further version events are received, notify the user
-    //  they will need to create the profile manually
-    this.createProfile("IonicCapacitorDemo2");
-    this.dataWedgeVersion = "6.3.  Please configure profile manually.  See the ReadMe for more details.";
-
-    //  Although we created the profile we can only configure it with DW 6.4.
-    await this.getActiveProfile();
-    
+    this.uiDatawedgeVersionAttention = false;
     //  Enumerate the available scanners on the device
     await this.enumerateScanners();
-    
-    //  Functionality of the FAB is available so display the button
-    this.uiHideFloatingActionButton = false;
-
-    this.changeDetectorRef.detectChanges();
-}
-
-  private async dataWedgeIsAtLeast64()
-  {
-    //  TODO
-    console.log("DataWedge 6.4 APIs are available");
-  
-    //  Documentation states the ability to set a profile config is only available from DW 6.4.
-    //  For our purposes, this includes setting the decoders and configuring the associated app / output params of the profile.
-    this.dataWedgeVersion = "6.4";
-    this.uiDatawedgeVersionAttention = false;
-    this.uiHideDecoders = false;
-
-    //  Configure the created profile (Barcode input)
-    await this.setConfigBarcode("IonicCapacitorDemo2", "com.darryncampbell.ioniccapacitor.demo2");
-
-    await this.setConfigIntent("IonicCapacitorDemo2");
-
-    //  Give some time for the profile to settle then query its value
-    setTimeout(async function () {
-      await this.getActiveProfile
-    }, 1000);
-
-    this.changeDetectorRef.detectChanges();
+    //  Ascertain the active profile
+    await this.getActiveProfile();
   }
 
-  private dataWedgeIsAtLeast65(dwVersion)
-  {
-    console.log("DataWedge 6.5 APIs (and above) are available");
-  
-    //  The ability to switch to a new scanner is only available from DW 6.5 onwards
-    //  Reconfigure UI so the user can choose the desired scanner
-    this.uiHideSelectScanner = false;
-    this.uiHideShowAvailableScanners = true;
-
-    //  6.5 also introduced messages which are received from the API to indicate success / failure
-    this.uiHideCommandMessages = false;
-    this.dataWedgeVersion = dwVersion;
-    this.changeDetectorRef.detectChanges();
-  }
-
+  /*
   private async createProfile(name)
   {
     try {      
@@ -180,12 +122,31 @@ export class HomePage {
       this.setCommandResult(err.message);
     }
   }
+*/
+
+  private async deleteProfile(name)
+  {
+    try {      
+      const result = await ZebraConfiguration.deleteProfile({
+        profileNames: [name],
+      });
+      console.log("Profile Deleted.  Result: " + result);
+      this.setCommandResult(result);
+    }
+    catch (err: any) {
+      console.log("Error deleting profile: " + err.message);
+      this.setCommandResult(err.message);
+    }
+  }
 
   private async getActiveProfile()
   {
     try {      
       const result = await ZebraQuery.getActiveProfile();
-      this.activeProfileText = result['com.symbol.datawedge.api.RESULT_GET_ACTIVE_PROFILE'];
+      console.log("Get Active Profile result: " + JSON.stringify(result));
+      let activeProfile = result['com.symbol.datawedge.api.RESULT_GET_ACTIVE_PROFILE'];
+      console.log("Retrieved Active profile.  It is: " + activeProfile);
+      this.activeProfileText = activeProfile;
       this.setCommandResult(result);
       this.changeDetectorRef.detectChanges();
     } catch (err: any) {
@@ -202,14 +163,9 @@ export class HomePage {
       this.setCommandResult(result);  
       let enumeratedScanners = result['com.symbol.datawedge.api.RESULT_ENUMERATE_SCANNERS'];
       this.scanners = enumeratedScanners;
-      let humanReadableScannerList = "";
       enumeratedScanners.forEach((scanner, index) => {
         console.log("Scanner found: name= " + scanner.SCANNER_NAME + ", id=" + scanner.SCANNER_INDEX + ", connected=" + scanner.SCANNER_CONNECTION_STATE);
-        humanReadableScannerList += scanner.SCANNER_NAME;
-        if (index < enumeratedScanners.length - 1)
-          humanReadableScannerList += ", ";
       });
-      this.availableScannersText = humanReadableScannerList;
       this.scanners.unshift({ "SCANNER_NAME": "Please Select...", "SCANNER_INDEX": -1, "SCANNER_CONNECTION_STATE": false });
       this.changeDetectorRef.detectChanges();
     } catch (err: any) {
@@ -239,10 +195,18 @@ export class HomePage {
 
     try {
       const pluginConfigs = [
+        //{
+        //  pluginName: DataWedgePlugin.BARCODE,
+        //  paramList: {
+        //  },
+        //},
         {
-          pluginName: DataWedgePlugin.BARCODE,
+          pluginName: DataWedgePlugin.INTENT,
           paramList: {
-          },
+            "intent_output_enabled": "true",
+            "intent_action": "com.darryn.ionic.capacitor.ACTION",
+            "intent_delivery": "2"
+          }
         },
       ];
 
@@ -255,7 +219,7 @@ export class HomePage {
 
       const result = await ZebraConfiguration.setConfig({
         profileName: profileName,
-        configMode: DataWedgeConfigMode.UPDATE,
+        configMode: DataWedgeConfigMode.CREATE_IF_NOT_EXIST,
         pluginConfigs: pluginConfigs,
         appList: appList,
       });
@@ -268,33 +232,12 @@ export class HomePage {
     }
   }
 
-  private async setConfigIntent(profileName)
-  {
-    //  TODO
-  //  Configure the created profile (intent plugin)
-//    let profileConfig2 = {
-//      "PROFILE_NAME": "IonicCapacitorDemo2",
-//      "PROFILE_ENABLED": "true",
-//      "CONFIG_MODE": "UPDATE",
-//      "PLUGIN_CONFIG": {
-//        "PLUGIN_NAME": "INTENT",
-//        "RESET_CONFIG": "true",
-//        "PARAM_LIST": {
-//          "intent_output_enabled": "true",
-//          "intent_action": "com.darryn.ionic.capacitor.ACTION",
-//          "intent_delivery": "2"
-//        }
-//      }
-//    };
-//    this.barcodeProvider.sendCommand("com.symbol.datawedge.api.SET_CONFIG", profileConfig2);
-
-  }
-
   //  Function to handle changes in the decoder checkboxes.  
   //  Note: SET_CONFIG only available on DW 6.4+ per the docs
   public async setDecoders() {
 
     //  TODO THIS DOES NOT WORK... RETRY WHEN THE OTHER SET_CONFIG ISSUE IS RESOLVED (INITIAL SET_CONFIG)
+    return;
 
     var paramListTemp = {
       "scanner_selection": "auto",
@@ -318,21 +261,21 @@ export class HomePage {
         {
           pluginName: DataWedgePlugin.BARCODE,
           paramList: paramListTemp,
-        },
+        }
       ];
 
       const appList = [
         {
           packageName: "com.darryncampbell.ioniccapacitor.demo2",
           activityList: ['*'],
-        },
+        }
       ];
 
       const result = await ZebraConfiguration.setConfig({
         profileName: "IonicCapacitorDemo2",
         configMode: DataWedgeConfigMode.UPDATE,
         pluginConfigs: pluginConfigs,
-        appList: appList,
+        appList: appList
       });
       this.setCommandResult(result);  
       console.log("Set Config (Barcode) Result: " + JSON.stringify(result));
@@ -343,7 +286,6 @@ export class HomePage {
   }
 
     //  Function to handle the user selecting a new scanner
-  //  Note: SWITCH_SCANNER only available on DW 6.5+
   public async scannerSelected() {
     console.log("Requested scanner is: " + this.selectedScanner);
     let localScannerIndex = 0;
@@ -389,7 +331,13 @@ export class HomePage {
   public async fabDown() {
     //  TODO
     //ZebraRuntime.softScanTrigger();
+    await this.deleteProfile("IonicCapacitorDemo2");
     await this.setConfigBarcode("IonicCapacitorDemo2", "com.darryncampbell.ioniccapacitor.demo2");
+    //await this.getActiveProfile();
+    setTimeout(async () => {await this.getActiveProfile();}, 1000);
+//    setTimeout(async function () {
+//      await this.getActiveProfile;
+//    }, 1000);
   }
 
   //  Function to handle the floating action button onUp.  API only supports TOGGLE_SCANNING currently

@@ -19,15 +19,11 @@
       <ion-label position="stacked" color="primary">Active Profile:</ion-label>
       <ion-textarea rows="1" [value]="activeProfileText" [readonly]=true></ion-textarea>
     </ion-item>
-    <ion-item no-lines [ngClass]="{'hide' : uiHideCommandMessages}">
+    <ion-item no-lines>
       <ion-label position="stacked" color="primary">Last API message:</ion-label>
       <ion-textarea [value]="commandResultText" [readonly]=true></ion-textarea>
     </ion-item>
-    <ion-item no-lines [ngClass]="{'hide' : uiHideShowAvailableScanners}">
-      <ion-label position="stacked" color="primary">Available scanners:</ion-label>
-      <ion-textarea rows="7" [value]="availableScannersText"></ion-textarea>
-    </ion-item>
-    <ion-item no-lines [ngClass]="{'hide' : uiHideSelectScanner}">
+    <ion-item no-lines>
       <ion-label position="stacked" color="primary">Selected Scanner</ion-label>
       <ion-select [(ngModel)]="selectedScanner" (ionChange)="scannerSelected()" okText="Select" cancelText="Dismiss">
         <ion-select-option *ngFor="let scannerTemp of scanners" [value]="scannerTemp.SCANNER_NAME">{{scannerTemp.SCANNER_NAME}}</ion-select-option>
@@ -40,13 +36,13 @@
         <ion-col>
           <ion-item no-lines>
             <ion-label>EAN 8</ion-label>
-            <ion-checkbox [(ngModel)]="ean8Decoder" (ionChange)="setDecoders()" [disabled]="uiHideDecoders"></ion-checkbox>
+            <ion-checkbox [(ngModel)]="ean8Decoder" (ionChange)="setDecoders()"></ion-checkbox>
           </ion-item>
         </ion-col>
         <ion-col>
           <ion-item no-lines>
             <ion-label>EAN 13</ion-label>
-            <ion-checkbox [(ngModel)]="ean13Decoder" (ionChange)="setDecoders()" [disabled]="uiHideDecoders"></ion-checkbox>
+            <ion-checkbox [(ngModel)]="ean13Decoder" (ionChange)="setDecoders()"></ion-checkbox>
           </ion-item>
         </ion-col>
       </ion-row>
@@ -54,13 +50,13 @@
         <ion-col>
           <ion-item no-lines>
             <ion-label>Code 39</ion-label>
-            <ion-checkbox [(ngModel)]="code39Decoder" (ionChange)="setDecoders()" [disabled]="uiHideDecoders"></ion-checkbox>
+            <ion-checkbox [(ngModel)]="code39Decoder" (ionChange)="setDecoders()"></ion-checkbox>
           </ion-item>
         </ion-col>
         <ion-col>
           <ion-item no-lines>
             <ion-label>Code 128</ion-label>
-            <ion-checkbox [(ngModel)]="code128Decoder" (ionChange)="setDecoders()" [disabled]="uiHideDecoders"></ion-checkbox>
+            <ion-checkbox [(ngModel)]="code128Decoder" (ionChange)="setDecoders()"></ion-checkbox>
           </ion-item>
         </ion-col>
       </ion-row>
@@ -79,7 +75,7 @@
 </ion-content>
 
 <ion-footer>
-  <ion-fab horizontal="end" vertical="bottom" [ngClass]="{'hide' : uiHideFloatingActionButton}">
+  <ion-fab horizontal="end" vertical="bottom">
     <ion-fab-button color="secondary" (touchstart)="fabDown()" (touchend)="fabUp()">
       <ion-icon name="barcode"></ion-icon>
     </ion-fab-button>
