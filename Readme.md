@@ -7,7 +7,7 @@ This sample demonstrates the use of the official Ionic plugin for Zebra devices.
 
 **For clarity, this plugin is supported by Ionic and was developed independently of Zebra**
 
-![Applictaion](https://raw.githubusercontent.com/darryncampbell/DataWedge-Ionic-Capacitor-Demo2/main/media/screen_01.png)
+![Applictaion](https://github.com/darryncampbell/DataWedge-Ionic-Capacitor-Demo2/raw/main/media/screen_01.png)
 
 ## Ionic documents and links
 - Zebra plugin API docs: https://ionic.io/docs/zebra-datawedge 
