@@ -1,5 +1,5 @@
 import { Component, ChangeDetectorRef } from '@angular/core';
-import { ZebraRuntime, ZebraQuery, ZebraConfiguration } from "@ionic-enterprise/zebra-scanner";
+import { ZebraRuntime, ZebraQuery, ZebraConfiguration, ScannerIdentifier } from "@ionic-enterprise/zebra-scanner";
 import { AlertController } from '@ionic/angular';
 import { Platform } from '@ionic/angular';
 import { Device } from '@capacitor/device';
@@ -16,7 +16,7 @@ import { BarcodeService } from '../services/barcode.service';
 })
 export class HomePage {
   private scans = [];
-  private scanners = [{ "SCANNER_NAME": "Please Wait...", "SCANNER_INDEX": 0, "SCANNER_CONNECTION_STATE": true }];
+  private scanners = [{ "name": "Please Wait...", "index": 0, "connectionState": true }];
   private selectedScanner = "Please Select...";
   private selectedScannerId = -1;
   private ean8Decoder = true;   //  Model for decoder
@@ -52,7 +52,6 @@ export class HomePage {
 
         this.changeDetectorRef.detectChanges();
       });
-      
     });
   }
 
@@ -84,13 +83,11 @@ export class HomePage {
 
   private async parseVersion(versionJson) {
     //  The version has been returned.  Includes the DW version along with other subsystem versions e.g MX  
-    var versionInfo = versionJson['com.symbol.datawedge.api.RESULT_GET_VERSION_INFO'];
-    console.log('Version Info: ' + JSON.stringify(versionInfo));
-    let dwVersion = versionInfo['DATAWEDGE'];
+    let dwVersion = versionJson['dataWedgeVersion'];
     this.dataWedgeVersion = dwVersion;
     console.log("Datawedge version: " + dwVersion);
     
-    let dwVersionTemp = versionInfo['DATAWEDGE'];
+    let dwVersionTemp = versionJson['dataWedgeVersion'];
     dwVersionTemp = dwVersionTemp.padStart(5, "0");
     this.changeDetectorRef.detectChanges();
     
@@ -101,50 +98,20 @@ export class HomePage {
   private async dataWedgeIsAtLeast65()
   {
     this.uiDatawedgeVersionAttention = false;
+    //  Create profile and configure it
+    await this.configureDataWedgeProfile("IonicCapacitorDemo2", "com.darryncampbell.ioniccapacitor.demo2");
     //  Enumerate the available scanners on the device
     await this.enumerateScanners();
-    //  Ascertain the active profile
-    await this.getActiveProfile();
-  }
-
-  /*
-  private async createProfile(name)
-  {
-    try {      
-      const result = await ZebraConfiguration.createProfile({
-        profileName: name,
-      });
-      console.log("Profile Created.  Result: " + result);
-      this.setCommandResult(result);
-    }
-    catch (err: any) {
-      console.log("Error creating profile: " + err.message);
-      this.setCommandResult(err.message);
-    }
-  }
-*/
-
-  private async deleteProfile(name)
-  {
-    try {      
-      const result = await ZebraConfiguration.deleteProfile({
-        profileNames: [name],
-      });
-      console.log("Profile Deleted.  Result: " + result);
-      this.setCommandResult(result);
-    }
-    catch (err: any) {
-      console.log("Error deleting profile: " + err.message);
-      this.setCommandResult(err.message);
-    }
+    //  Ascertain the active profile.  Give DataWedge chance to register that the profile might have changed.
+    setTimeout(async () => {await this.getActiveProfile();}, 1000);
   }
 
   private async getActiveProfile()
   {
     try {      
       const result = await ZebraQuery.getActiveProfile();
-      console.log("Get Active Profile result: " + JSON.stringify(result));
-      let activeProfile = result['com.symbol.datawedge.api.RESULT_GET_ACTIVE_PROFILE'];
+      console.log(result);
+      let activeProfile = result;
       console.log("Retrieved Active profile.  It is: " + activeProfile);
       this.activeProfileText = activeProfile;
       this.setCommandResult(result);
@@ -161,12 +128,12 @@ export class HomePage {
       const result = await ZebraQuery.enumerateScanners();
       console.log("Enum Result: " + JSON.stringify(result));
       this.setCommandResult(result);  
-      let enumeratedScanners = result['com.symbol.datawedge.api.RESULT_ENUMERATE_SCANNERS'];
+      let enumeratedScanners = result;
       this.scanners = enumeratedScanners;
       enumeratedScanners.forEach((scanner, index) => {
-        console.log("Scanner found: name= " + scanner.SCANNER_NAME + ", id=" + scanner.SCANNER_INDEX + ", connected=" + scanner.SCANNER_CONNECTION_STATE);
+        console.log("Scanner found: name= " + scanner.name + ", id=" + scanner.index + ", connected=" + scanner.connectionState);
       });
-      this.scanners.unshift({ "SCANNER_NAME": "Please Select...", "SCANNER_INDEX": -1, "SCANNER_CONNECTION_STATE": false });
+      this.scanners.unshift({ "name": "Please Select...", "index": -1, "connectionState": false });
       this.changeDetectorRef.detectChanges();
     } catch (err: any) {
       this.setCommandResult(err.message);
@@ -174,32 +141,23 @@ export class HomePage {
     }
   }
 
-  private async setConfigBarcode(profileName, packageName)
+  private async configureDataWedgeProfile(profileName, packageName)
   {
-//    let profileConfig = {
-//      "PROFILE_NAME": "IonicCapacitorDemo2",
-//      "PROFILE_ENABLED": "true",
-//      "CONFIG_MODE": "UPDATE",
-//      "PLUGIN_CONFIG": {
-//        "PLUGIN_NAME": "BARCODE",
-//        "RESET_CONFIG": "true",
-//        "PARAM_LIST": {}
-//      },
-//      "APP_LIST": [{
-//        "PACKAGE_NAME": "com.darryncampbell.ioniccapacitor.demo2",
-//        "ACTIVITY_LIST": ["*"]
-//      }]
-//    };
-//    this.barcodeProvider.sendCommand("com.symbol.datawedge.api.SET_CONFIG", profileConfig);
-
-
     try {
+      //  Note: The ability to define multiple plugins in a single call to SET_CONFIG was only added in DataWedge 6.5
       const pluginConfigs = [
-        //{
-        //  pluginName: DataWedgePlugin.BARCODE,
-        //  paramList: {
-        //  },
-        //},
+        {
+          pluginName: DataWedgePlugin.BARCODE,
+          paramList: {
+            "scanner_input_enabled": "true"
+          }
+        },
+        {
+          pluginName: DataWedgePlugin.KEYSTROKE,
+          paramList: {
+            "keystroke_output_enabled": "false"
+          }
+        },
         {
           pluginName: DataWedgePlugin.INTENT,
           paramList: {
@@ -235,10 +193,8 @@ export class HomePage {
   //  Function to handle changes in the decoder checkboxes.  
   //  Note: SET_CONFIG only available on DW 6.4+ per the docs
   public async setDecoders() {
-
-    //  TODO THIS DOES NOT WORK... RETRY WHEN THE OTHER SET_CONFIG ISSUE IS RESOLVED (INITIAL SET_CONFIG)
-    return;
-
+    
+    /*
     var paramListTemp = {
       "scanner_selection": "auto",
       "decoder_ean8": "" + this.ean8Decoder,
@@ -283,6 +239,32 @@ export class HomePage {
       this.setCommandResult(err.message);
       console.log("Error Setting barcode config: " + err.message);
     }
+    */
+    
+    var paramList = {
+      "decoder_ean8": "" + this.ean8Decoder,
+      "decoder_ean13": "" + this.ean13Decoder,
+      "decoder_code128": "" + this.code128Decoder,
+      "decoder_code39": "" + this.code39Decoder
+    }
+
+    //  switchScanner requires the scanner ID.  This will be 0 unless the user has deliberately changed it by selecting a different scanner.
+    let scannerIndex = this.selectedScannerId;
+    if (scannerIndex == -1)
+      scannerIndex = 0;
+    
+    try {
+      const result = await ZebraRuntime.switchScannerParams({
+        scannerIdentifier: ScannerIdentifier.AUTO,
+        scannerParams: paramList
+      });
+      this.setCommandResult(result);  
+      console.log("Set Config (Barcode) Result: " + JSON.stringify(result));
+    } catch (err: any) {
+      this.setCommandResult(err.message);
+      console.log("Error Setting barcode config: " + err.message);
+    }
+    
   }
 
     //  Function to handle the user selecting a new scanner
@@ -292,9 +274,9 @@ export class HomePage {
     let localScannerName = "";
     for (let scannerTemp of this.scanners) {
       //  The current scanner will be returned as SCANNER_CONNECTION_STATE
-      if (scannerTemp.SCANNER_NAME == this.selectedScanner) {
-        localScannerIndex = scannerTemp.SCANNER_INDEX;
-        localScannerName = scannerTemp.SCANNER_NAME;
+      if (scannerTemp.name == this.selectedScanner) {
+        localScannerIndex = scannerTemp.index;
+        localScannerName = scannerTemp.name;
       }
     }
     if (this.selectedScannerId == localScannerIndex || localScannerIndex < 0) {
@@ -329,15 +311,7 @@ export class HomePage {
 
   //  Function to handle the floating action button onDown.  API only supports TOGGLE_SCANNING currently
   public async fabDown() {
-    //  TODO
-    //ZebraRuntime.softScanTrigger();
-    await this.deleteProfile("IonicCapacitorDemo2");
-    await this.setConfigBarcode("IonicCapacitorDemo2", "com.darryncampbell.ioniccapacitor.demo2");
-    //await this.getActiveProfile();
-    setTimeout(async () => {await this.getActiveProfile();}, 1000);
-//    setTimeout(async function () {
-//      await this.getActiveProfile;
-//    }, 1000);
+    ZebraRuntime.softScanTrigger("com.darryn.ionic.capacitor.ACTION");
   }
 
   //  Function to handle the floating action button onUp.  API only supports TOGGLE_SCANNING currently

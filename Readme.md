@@ -59,7 +59,7 @@ If you still have trouble building Ionic Capacitor apps for Android, please chec
 
 ## Notes
 - The Ionic `zebra-scanner` plugin only controls (and replaces) the [DataWedge API](https://techdocs.zebra.com/datawedge/latest/guide/api/).  
-- The Ionic `zebra-scanner` plugin does not handle Intents sent from the [Intent output plugin](https://techdocs.zebra.com/datawedge/latest/guide/output/intent/), you should handle this yourself.  This plugin uses my own [Cordova Intent](https://www.npmjs.com/package/com-darryncampbell-cordova-plugin-intent) plugin to process barcode scans
+- The Ionic `zebra-scanner` plugin does not handle Intents sent from the [Intent output plugin](https://techdocs.zebra.com/datawedge/latest/guide/output/intent/) in response to the hardware scanner trigger, you should handle this yourself.  This plugin uses my own [Cordova Intent](https://www.npmjs.com/package/com-darryncampbell-cordova-plugin-intent) plugin to process barcode scans.
 - This application has been tested and developed using a TC52ax running DataWedge 11.2.48.  Although this app should work on older versions of DataWedge, perhaps as early as 6.5, I have not tested that.
 - On launch, a DataWedge profile will be created, configured and associated with this application
 

@@ -26,7 +26,7 @@
     <ion-item no-lines>
       <ion-label position="stacked" color="primary">Selected Scanner</ion-label>
       <ion-select [(ngModel)]="selectedScanner" (ionChange)="scannerSelected()" okText="Select" cancelText="Dismiss">
-        <ion-select-option *ngFor="let scannerTemp of scanners" [value]="scannerTemp.SCANNER_NAME">{{scannerTemp.SCANNER_NAME}}</ion-select-option>
+        <ion-select-option *ngFor="let scannerTemp of scanners" [value]="scannerTemp.name">{{scannerTemp.name}}</ion-select-option>
       </ion-select>
     </ion-item>
 
