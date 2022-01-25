@@ -1,13 +1,10 @@
 import { Component, ChangeDetectorRef } from '@angular/core';
-import { ZebraRuntime, ZebraQuery, ZebraConfiguration, ScannerIdentifier } from "@ionic-enterprise/zebra-scanner";
+import { ZebraRuntime, ZebraQuery, ZebraConfiguration, ZebraNotification, ScannerIdentifier, ZebraError, DataWedgeNotificationType } from "@ionic-enterprise/zebra-scanner";
 import { AlertController } from '@ionic/angular';
 import { Platform } from '@ionic/angular';
 import { Device } from '@capacitor/device';
 import { ToastController } from '@ionic/angular';
 import { DataWedgeConfigMode, DataWedgePlugin } from '@ionic-enterprise/zebra-scanner/dist/esm/definitions';
-import { Events } from '../services/events';
-import { BarcodeService } from '../services/barcode.service';
-
 
 @Component({
   selector: 'app-home',
@@ -24,12 +21,12 @@ export class HomePage {
   private code39Decoder = true; //  Model for decoder
   private code128Decoder = true;//  Model for decoder
   private dataWedgeVersion = "Pre 6.5. This sample app is not recommended for your device";
-  private activeProfileText = "Requires Datawedge 6.3+";
+  private activeProfileText = "Requires Datawedge 6.5+";
   private commandResultText = "Messages from DataWedge will go here";
   private uiDatawedgeVersionAttention = true;
 
-  constructor(private barcodeProvider: BarcodeService, private changeDetectorRef: ChangeDetectorRef, 
-    public events: Events, private alertController: AlertController, private platform: Platform, 
+  constructor(private changeDetectorRef: ChangeDetectorRef, 
+    private alertController: AlertController, private platform: Platform, 
     private toastController: ToastController) {
 
     this.platform.ready().then(async (readySource) => {
@@ -39,18 +36,25 @@ export class HomePage {
       const result = await ZebraQuery.getVersionInfo();
       this.parseVersion(result);
 
-      //  A scan has been received
-      events.subscribe('data:scan', (data: any) => {
-        //  Update the list of scanned barcodes
-        let scannedData = data.scanData.extras["com.symbol.datawedge.data_string"];
-        let scannedType = data.scanData.extras["com.symbol.datawedge.label_type"];
-        this.scans.unshift({ "data": scannedData, "type": scannedType, "timeAtDecode": data.time });
-
-        //  On older devices, if a scan is received we can assume the profile was correctly configured manually
-        //  so remove the yellow highlight.
-        this.uiDatawedgeVersionAttention = false;
-
-        this.changeDetectorRef.detectChanges();
+      ZebraNotification.registerForNotification({
+        appName: 'com.darryncampbell.ioniccapacitor.demo2',
+        callback: (data: any, error?: ZebraError) => {
+          if (error) 
+          {
+            console.log('ERROR: ' + error.message);
+          }
+          else 
+          {
+            console.log('CALLBACK DATA: ' + JSON.stringify(data));
+            let scannedData = data["com.symbol.datawedge.data_string"];
+            let scannedType = data["com.symbol.datawedge.label_type"];
+            this.scans.unshift({ "data": scannedData, "type": scannedType, "timeAtDecode": data.time });
+            this.uiDatawedgeVersionAttention = false;
+            this.changeDetectorRef.detectChanges();
+          }
+        },
+        intentAction: 'com.darryn.ionic.capacitor.ACTION',
+        notificationType: DataWedgeNotificationType.CONFIGURATION_UPDATE,
       });
     });
   }
@@ -315,6 +319,6 @@ export class HomePage {
   }
 
   //  Function to handle the floating action button onUp.  API only supports TOGGLE_SCANNING currently
-  public fabUp() {  }
+  public fabUp() { }
 
 }
