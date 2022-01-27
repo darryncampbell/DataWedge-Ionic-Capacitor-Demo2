@@ -104,10 +104,8 @@ export class HomePage {
     this.uiDatawedgeVersionAttention = false;
     //  Create profile and configure it
     await this.configureDataWedgeProfile("IonicCapacitorDemo2", "com.darryncampbell.ioniccapacitor.demo2");
-    //  Enumerate the available scanners on the device
-    await this.enumerateScanners();
     //  Ascertain the active profile.  Give DataWedge chance to register that the profile might have changed.
-    setTimeout(async () => {await this.getActiveProfile();}, 1000);
+    setTimeout(async () => {await this.enumerateScanners();await this.getActiveProfile();}, 1000);
   }
 
   private async getActiveProfile()
@@ -259,7 +257,7 @@ export class HomePage {
     
     try {
       const result = await ZebraRuntime.switchScannerParams({
-        scannerIdentifier: ScannerIdentifier.AUTO,
+        //scannerIdentifier: ScannerIdentifier.AUTO,
         scannerParams: paramList
       });
       this.setCommandResult(result);  
