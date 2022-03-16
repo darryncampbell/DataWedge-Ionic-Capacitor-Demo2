@@ -46,11 +46,14 @@ export class HomePage {
           else 
           {
             console.log('CALLBACK DATA: ' + JSON.stringify(data));
-            let scannedData = data["com.symbol.datawedge.data_string"];
-            let scannedType = data["com.symbol.datawedge.label_type"];
-            this.scans.unshift({ "data": scannedData, "type": scannedType, "timeAtDecode": data.time });
-            this.uiDatawedgeVersionAttention = false;
-            this.changeDetectorRef.detectChanges();
+            if (data.hasOwnProperty('com.symbol.datawedge.data_string'))
+            {
+              let scannedData = data["com.symbol.datawedge.data_string"];
+              let scannedType = data["com.symbol.datawedge.label_type"];
+              this.scans.unshift({ "data": scannedData, "type": scannedType, "timeAtDecode": data.time });
+              this.uiDatawedgeVersionAttention = false;
+              this.changeDetectorRef.detectChanges();
+            }
           }
         },
         intentAction: 'com.darryn.ionic.capacitor.ACTION',
@@ -196,53 +199,6 @@ export class HomePage {
   //  Note: SET_CONFIG only available on DW 6.4+ per the docs
   public async setDecoders() {
     
-    /*
-    var paramListTemp = {
-      "scanner_selection": "auto",
-      "decoder_ean8": "" + this.ean8Decoder,
-      "decoder_ean13": "" + this.ean13Decoder,
-      "decoder_code128": "" + this.code128Decoder,
-      "decoder_code39": "" + this.code39Decoder
-    }
-    //  The "scanner_selection" parameter supports "auto" to apply to the default scanner.
-    //  If we have selected a different scanner we need to ensure the settings are applied
-    //  to the correct scanner by specifying "current-device-id".  See http://techdocs.zebra.com/datawedge/6-7/guide/api/setconfig/
-    //  for more information.  selectedScannerId will be >-1 if the user has chosen a specific scanner.
-    if (this.selectedScannerId > -1)
-    {
-      paramListTemp["current-device-id"] = "" + this.selectedScannerId;
-      delete paramListTemp["scanner_selection"];
-    }
-    
-    try {
-      const pluginConfigs = [
-        {
-          pluginName: DataWedgePlugin.BARCODE,
-          paramList: paramListTemp,
-        }
-      ];
-
-      const appList = [
-        {
-          packageName: "com.darryncampbell.ioniccapacitor.demo2",
-          activityList: ['*'],
-        }
-      ];
-
-      const result = await ZebraConfiguration.setConfig({
-        profileName: "IonicCapacitorDemo2",
-        configMode: DataWedgeConfigMode.UPDATE,
-        pluginConfigs: pluginConfigs,
-        appList: appList
-      });
-      this.setCommandResult(result);  
-      console.log("Set Config (Barcode) Result: " + JSON.stringify(result));
-    } catch (err: any) {
-      this.setCommandResult(err.message);
-      console.log("Error Setting barcode config: " + err.message);
-    }
-    */
-    
     var paramList = {
       "decoder_ean8": "" + this.ean8Decoder,
       "decoder_ean13": "" + this.ean13Decoder,
@@ -250,11 +206,6 @@ export class HomePage {
       "decoder_code39": "" + this.code39Decoder
     }
 
-    //  switchScanner requires the scanner ID.  This will be 0 unless the user has deliberately changed it by selecting a different scanner.
-    let scannerIndex = this.selectedScannerId;
-    if (scannerIndex == -1)
-      scannerIndex = 0;
-    
     try {
       const result = await ZebraRuntime.switchScannerParams({
         //scannerIdentifier: ScannerIdentifier.AUTO,
